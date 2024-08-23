@@ -1,6 +1,6 @@
 # Unused Nodes Finder for Blender
 
-## Аддон для Blender, разработанный для поиска неиспользуемых нод в сцене.
+## Аддон для Blender, разработанный для поиска неиспользуемых нод в сцене
 
 ![Image alt](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmp5aGJ3cmZ2NXl0Ync2ZnBkdTRpbGNsMm50N3gwNnJtZmlwbjhhYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ziAj9OON3tCc4cWLmR/giphy.gif)
 
@@ -26,4 +26,4 @@
 1. Откройте 3D Viewport в Blender.
 2. Найдите панель "Unused Nodes Finder" в боковой панели (N-panel) во вкладке "Tool".
 3. Нажмите кнопку "Find and Organize Unused Nodes".
-4. Список неиспользованных нод будет выведен в консоли Blender и подсвечен в Shader Editor.
+4. Если материалы, используемые в сцене, содержат неиспользуемые ноды, список неиспользованных нод будет выведен в консоли, а материалы будут обновлены.
