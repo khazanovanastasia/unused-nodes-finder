@@ -1,10 +1,6 @@
-print("Starting to load the addon")
-
 import bpy
 from bpy.types import Operator, Panel
 from bpy.props import StringProperty, BoolProperty
-
-print("Imports successful")
 
 class UNUSED_NODES_OT_find_and_organize(Operator):
     bl_idname = "unused_nodes.find_and_organize"
@@ -53,41 +49,39 @@ class UNUSED_NODES_OT_find_and_organize(Operator):
                             
     def find_unused_nodes(self):
         unused_nodes = []
-        for material in bpy.data.materials:
-            if material.use_nodes:
-                unused_nodes.extend(self.find_unused_nodes_recursive(material.node_tree, material.name))
-        return unused_nodes
-
-    def find_unused_nodes_recursive(self, node_tree, material_name, parent_node=None):
-        unused_nodes = []
-        output_node = node_tree.get_output_node('ALL')
         
-        if output_node:
-            linked_nodes = set()
-            to_check = [output_node]
+        def check_node_tree(material, node_tree, parent_node=None):
+            output_node = next((node for node in node_tree.nodes if node.type == 'OUTPUT_MATERIAL'), None)
+            if not output_node:
+                return
             
-            while to_check:
-                node = to_check.pop(0)
-                if node not in linked_nodes:
-                    linked_nodes.add(node)
-                    for input in node.inputs:
-                        for link in input.links:
-                            to_check.append(link.from_node)
+            used_nodes = set()
+            nodes_to_check = [output_node]
+            
+            while nodes_to_check:
+                current_node = nodes_to_check.pop(0)
+                if current_node not in used_nodes:
+                    used_nodes.add(current_node)
+                    for input_socket in current_node.inputs:
+                        for link in input_socket.links:
+                            nodes_to_check.append(link.from_node)
             
             for node in node_tree.nodes:
-                if node not in linked_nodes and node.type not in ['FRAME', 'ATTRIBUTE']:
+                if node not in used_nodes and node.type != 'FRAME':
                     if parent_node:
-                        unused_nodes.append((material_name, parent_node, node))
+                        unused_nodes.append((material.name, parent_node, node))
                     else:
-                        unused_nodes.append((material_name, node))
+                        unused_nodes.append((material.name, node))
                 
-                # Рекурсивно проверяем группы нод
                 if node.type == 'NODE_GROUP' and node.node_tree:
-                    group_unused_nodes = self.find_unused_nodes_recursive(node.node_tree, material_name, node)
-                    unused_nodes.extend(group_unused_nodes)
+                    check_node_tree(material, node.node_tree, node)
+        
+        for material in bpy.data.materials:
+            if material.use_nodes:
+                check_node_tree(material, material.node_tree)
         
         return unused_nodes
-
+        
     def print_unused_nodes(self, unused_nodes):
         if not unused_nodes:
             self.report({'INFO'}, "No unused nodes found.")
@@ -107,7 +101,7 @@ class UNUSED_NODES_OT_find_and_organize(Operator):
                 else:
                     material_name, parent_node, node = item
                     self.report({'INFO'}, f"Material: {material_name}, Group: {parent_node.name}, Node: {node.name}, Type: {node.type}")
-        
+              
     def add_attribute_node(self, material, unused_node, parent_node=None):
         node_tree = parent_node.node_tree if parent_node else material.node_tree
         
